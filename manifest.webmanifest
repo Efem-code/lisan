@@ -1,0 +1,17 @@
+{
+  "name": "Lisan — Arabic & Urdu",
+  "short_name": "Lisan",
+  "description": "Learn Arabic and Urdu from the alphabet up. Short daily lessons that run entirely on your phone.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#141a17",
+  "theme_color": "#3fae4a",
+  "categories": ["education"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

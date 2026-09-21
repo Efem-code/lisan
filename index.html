@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lisan</title>
+<meta name="description" content="Learn Arabic and Urdu from the alphabet up — short daily lessons that run entirely on your phone.">
+<meta name="theme-color" content="#14261d" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Lisan">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ------------------------------------------------------------- PATH -->
+  <section class="screen" id="screen-path" data-tab="path">
+    <header class="topbar">
+      <button class="chip course-chip" id="btn-course"><span id="course-flag"></span><span id="course-name"></span></button>
+      <div class="stats">
+        <span class="stat streak" id="stat-streak" title="Day streak">🔥 <b>0</b></span>
+        <span class="stat gem" id="stat-xp" title="Total XP">✦ <b>0</b></span>
+        <span class="stat known" id="stat-known" title="Words and letters met">◆ <b>0</b></span>
+      </div>
+    </header>
+
+    <div class="goalbar">
+      <div class="goalbar-track"><div class="goalbar-fill" id="goal-fill"></div></div>
+      <span id="goal-text"></span>
+    </div>
+
+    <div class="pane" id="path-list"></div>
+  </section>
+
+  <!-- --------------------------------------------------------- PRACTICE -->
+  <section class="screen" id="screen-practice" data-tab="practice" hidden>
+    <header class="topbar"><h1>Practice</h1></header>
+    <div class="pane">
+      <div class="card">
+        <h2>Strengthen what is fading</h2>
+        <p class="hint" id="practice-note"></p>
+        <button class="big-btn green" id="btn-practice">Start practice</button>
+      </div>
+      <div class="card">
+        <h2>Weakest right now</h2>
+        <ul class="weaklist" id="weaklist"></ul>
+        <p class="hint" id="weak-empty" hidden>Finish a lesson first — there is nothing to review yet.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------ WORDS -->
+  <section class="screen" id="screen-words" data-tab="words" hidden>
+    <header class="topbar">
+      <h1>Words</h1>
+      <span class="bar-note" id="words-count"></span>
+    </header>
+    <div class="pane" id="words-list"></div>
+  </section>
+
+  <!-- ----------------------------------------------------------- LESSON -->
+  <section class="screen lesson-screen" id="screen-lesson" hidden>
+    <header class="lessonbar">
+      <button class="icon-btn" id="btn-quit" aria-label="Quit lesson">✕</button>
+      <div class="progress"><div class="progress-fill" id="lesson-progress"></div></div>
+    </header>
+
+    <div class="exercise" id="exercise"></div>
+
+    <div class="footer" id="lesson-footer">
+      <div class="feedback" id="feedback" hidden>
+        <div class="fb-title" id="fb-title"></div>
+        <div class="fb-body" id="fb-body"></div>
+      </div>
+      <button class="big-btn grey" id="btn-check" disabled>Check</button>
+    </div>
+  </section>
+
+  <!-- --------------------------------------------------------- COMPLETE -->
+  <section class="screen" id="screen-done" hidden>
+    <div class="done-wrap">
+      <div class="done-mark" id="done-mark">✦</div>
+      <h1 id="done-title">Lesson complete</h1>
+      <div class="done-stats">
+        <div class="done-stat xp"><span class="lbl">XP</span><span class="val" id="done-xp">0</span></div>
+        <div class="done-stat acc"><span class="lbl">Accuracy</span><span class="val" id="done-acc">0%</span></div>
+        <div class="done-stat time"><span class="lbl">Time</span><span class="val" id="done-time">0:00</span></div>
+      </div>
+      <div id="done-newwords"></div>
+      <button class="big-btn green" id="btn-done-continue">Continue</button>
+    </div>
+  </section>
+
+  <!-- ----------------------------------------------------------- SHEETS -->
+  <div class="sheet" id="sheet-course" hidden>
+    <div class="sheet-inner">
+      <h2>Choose a course</h2>
+      <div id="course-options"></div>
+      <button class="big-btn grey" id="btn-course-close">Close</button>
+    </div>
+  </div>
+
+  <div class="sheet" id="sheet-settings" hidden>
+    <div class="sheet-inner">
+      <h2>Settings</h2>
+      <label class="toggle"><input type="checkbox" id="opt-roman"> <span>Show romanisation</span></label>
+      <p class="hint indent">Turn this off once you can read the script — it is the single biggest thing holding beginners back.</p>
+      <label class="toggle"><input type="checkbox" id="opt-listen"> <span>Listening exercises</span></label>
+      <p class="hint indent" id="voice-note"></p>
+      <label class="toggle"><input type="checkbox" id="opt-sound"> <span>Sound effects</span></label>
+      <label class="toggle"><input type="checkbox" id="opt-haptics"> <span>Vibration</span></label>
+      <label class="field">
+        <span>Daily goal</span>
+        <select id="opt-goal">
+          <option value="10">Casual — 10 XP</option>
+          <option value="30">Regular — 30 XP</option>
+          <option value="60">Serious — 60 XP</option>
+          <option value="120">Intense — 120 XP</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Speech speed</span>
+        <select id="opt-rate">
+          <option value="0.55">Very slow</option>
+          <option value="0.75">Slow</option>
+          <option value="1">Normal</option>
+        </select>
+      </label>
+      <div class="row">
+        <button class="big-btn grey" id="btn-export">Export data</button>
+        <button class="big-btn grey danger" id="btn-reset">Reset everything</button>
+      </div>
+      <p class="hint" id="settings-note"></p>
+      <button class="big-btn green" id="btn-settings-close">Done</button>
+    </div>
+  </div>
+
+  <div class="banner" id="banner" hidden>
+    <span class="banner-text" id="banner-text"></span>
+    <button class="banner-act" id="banner-act"></button>
+    <button class="banner-x" id="banner-x" aria-label="Dismiss">&times;</button>
+  </div>
+
+  <nav class="tabs" id="tabs">
+    <button data-goto="path" class="on"><span class="tab-ico">◎</span>Learn</button>
+    <button data-goto="practice"><span class="tab-ico">↻</span>Practice</button>
+    <button data-goto="words"><span class="tab-ico">☰</span>Words</button>
+    <button id="btn-settings"><span class="tab-ico">⚙</span>Settings</button>
+  </nav>
+
+</div>
+
+<script src="alphabet.js"></script>
+<script src="courses.js"></script>
+<script src="lesson.js"></script>
+<script src="pron.js"></script>
+<script src="explain.js"></script>
+<script src="tts.js"></script>
+<script src="store.js"></script>
+<script src="app.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,435 @@
+/* Lisan — styles.
+ *
+ * Two script systems have to be legible here, and they have very different
+ * needs. Naskh (Arabic) sits on a baseline much like Latin. Nastaliq (Urdu)
+ * cascades down and to the left, needs roughly double the line height, and
+ * will be clipped by any tight box — which is why script text gets its own
+ * generous padding rather than inheriting the layout's.
+ */
+
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f2f5f3;
+  --ink: #16241d;
+  --ink-soft: #6b7a72;
+  --line: #dfe6e2;
+  --line-strong: #c4d0c9;
+  --green: #3fae4a;
+  --green-dark: #2f8a38;
+  --green-soft: #e4f5e5;
+  --red: #d8453c;
+  --red-dark: #b0352e;
+  --red-soft: #fdeceb;
+  --gold: #d9a020;
+  --blue: #2b7fd4;
+  --radius: 16px;
+  --pad: 16px;
+  --font-naskh: 'Noto Naskh Arabic', 'Amiri', 'Traditional Arabic', 'Geeza Pro', 'Arabic Typesetting', serif;
+  --font-nastaliq: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', 'Nafees Nastaleeq', 'Noto Naskh Arabic', serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141a17;
+    --surface: #1d2622;
+    --surface-2: #26312c;
+    --ink: #e9f0ec;
+    --ink-soft: #94a39b;
+    --line: #2f3b35;
+    --line-strong: #3d4a43;
+    --green: #4cc05a;
+    --green-dark: #35903f;
+    --green-soft: #1e3423;
+    --red: #e4675e;
+    --red-dark: #b64a43;
+    --red-soft: #35211f;
+    --gold: #e8b64a;
+    --blue: #5ca0e0;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: none;
+}
+#app { min-height: 100%; padding-top: env(safe-area-inset-top, 0); }
+.screen { padding-bottom: calc(66px + env(safe-area-inset-bottom, 0)); }
+.lesson-screen { padding-bottom: 0; }
+[hidden] { display: none !important; }
+button { font: inherit; color: inherit; }
+h1 { font-size: 19px; margin: 0; }
+h2 { font-size: 15px; margin: 0; }
+
+/* ---------------------------------------------------------------- script */
+
+.script { font-family: var(--font-naskh); direction: rtl; unicode-bidi: isolate; line-height: 1.7; }
+[data-script="nastaliq"] .script {
+  font-family: var(--font-nastaliq);
+  /* Nastaliq descends steeply; without the extra room the tails are cut off. */
+  line-height: 2.05;
+  padding-block: .22em;
+}
+.script.xl { font-size: 42px; }
+.script.lg { font-size: 30px; }
+.script.md { font-size: 22px; }
+[data-script="nastaliq"] .script.xl { font-size: 44px; }
+.roman { color: var(--ink-soft); font-size: 14px; font-style: italic; }
+/* The respelling is the line a beginner can actually act on, so it outranks
+   the academic transliteration visually. */
+.pron { font-size: 17px; font-weight: 700; letter-spacing: .4px; color: var(--blue); }
+.pron.sm { font-size: 13.5px; font-weight: 600; }
+.sound-tips {
+  display: flex; flex-direction: column; gap: 8px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 14px; padding: 12px 14px;
+}
+.sound-tips .st-head { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; color: var(--ink-soft); }
+.sound-tip { display: flex; gap: 10px; align-items: baseline; font-size: 13.5px; }
+.sound-tip .st-sym {
+  font-family: var(--font-naskh); font-size: 17px; font-weight: 700; color: var(--blue);
+  min-width: 1.6em; text-align: center; flex: 0 0 auto;
+}
+.speak-btn.slow {
+  background: var(--surface-2); color: var(--ink-soft);
+  box-shadow: 0 4px 0 var(--line-strong);
+  font-size: 11px; font-weight: 800; letter-spacing: .5px;
+}
+.speak-btn.slow.small { box-shadow: 0 3px 0 var(--line-strong); font-size: 9px; }
+.english { font-size: 17px; }
+
+/* ---------------------------------------------------------------- chrome */
+
+.topbar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px var(--pad); min-height: 54px;
+  position: sticky; top: 0; z-index: 20;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.topbar h1 { flex: 1; }
+.bar-note { font-size: 13px; color: var(--ink-soft); }
+.chip {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--surface-2); border: 1px solid var(--line);
+  border-radius: 999px; padding: 6px 12px; cursor: pointer; font-weight: 600; font-size: 14px;
+}
+.course-chip { flex: 1; min-width: 0; }
+.course-chip span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#course-flag { font-family: var(--font-naskh); font-size: 17px; }
+
+.stats { display: flex; gap: 10px; align-items: center; }
+.stat { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 3px; white-space: nowrap; }
+.stat.streak { color: #e2792b; }
+.stat.gem { color: var(--gold); }
+.stat.known { color: var(--green); }
+
+.goalbar { display: flex; align-items: center; gap: 10px; padding: 8px var(--pad) 0; font-size: 12px; color: var(--ink-soft); }
+.goalbar-track { flex: 1; height: 9px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+.goalbar-fill { height: 100%; width: 0; background: var(--gold); border-radius: 99px; transition: width .4s; }
+
+.pane { padding: var(--pad); display: flex; flex-direction: column; gap: 12px; max-width: 620px; margin: 0 auto; }
+
+.card {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 16px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.hint { margin: 0; font-size: 13px; color: var(--ink-soft); }
+.hint.indent { margin: -6px 0 2px 30px; }
+.row { display: flex; gap: 8px; }
+.row > * { flex: 1; }
+.field { display: flex; flex-direction: column; gap: 5px; font-size: 13px; color: var(--ink-soft); }
+select {
+  font: inherit; color: var(--ink); background: var(--surface-2);
+  border: 1px solid var(--line); border-radius: 12px; padding: 11px;
+}
+.toggle { display: flex; align-items: center; gap: 11px; padding: 6px 0; font-size: 14.5px; }
+.toggle input { width: 21px; height: 21px; accent-color: var(--green); }
+
+/* The chunky pressable button: a solid bottom edge that collapses on tap. */
+.big-btn {
+  border: 0; border-radius: 14px; padding: 14px 16px;
+  font-weight: 800; font-size: 15px; letter-spacing: .4px;
+  cursor: pointer; text-transform: uppercase;
+  box-shadow: 0 4px 0 var(--line-strong);
+  background: var(--surface-2); color: var(--ink);
+  transition: transform .04s, box-shadow .04s;
+}
+.big-btn.green { background: var(--green); color: #fff; box-shadow: 0 4px 0 var(--green-dark); }
+.big-btn.red { background: var(--red); color: #fff; box-shadow: 0 4px 0 var(--red-dark); }
+.big-btn.danger { color: var(--red); }
+.big-btn:active:not(:disabled) { transform: translateY(4px); box-shadow: none; }
+.big-btn:disabled { opacity: .45; cursor: default; box-shadow: 0 4px 0 var(--line); }
+
+.icon-btn { background: none; border: 0; padding: 8px 10px; font-size: 20px; border-radius: 10px; cursor: pointer; color: var(--ink-soft); }
+
+.tabs {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  background: color-mix(in srgb, var(--surface) 95%, transparent);
+  backdrop-filter: blur(12px); border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.tabs button {
+  background: none; border: 0; padding: 9px 4px 11px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  font-size: 11px; font-weight: 600; color: var(--ink-soft);
+}
+.tabs button.on { color: var(--green); }
+.tab-ico { font-size: 19px; line-height: 1; }
+
+/* ------------------------------------------------------------------ path */
+
+.unit {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); overflow: hidden;
+}
+.unit-head { padding: 14px 16px; background: var(--green); color: #fff; }
+.unit-head.alphabet { background: var(--blue); }
+.unit-head.done { background: var(--green-dark); }
+.unit-head .u-title { font-weight: 800; font-size: 16px; }
+.unit-head .u-blurb { font-size: 12.5px; opacity: .92; margin-top: 2px; }
+.unit-nodes { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 16px; }
+
+.node {
+  width: 62px; display: flex; flex-direction: column; align-items: center; gap: 5px;
+  background: none; border: 0; cursor: pointer; padding: 0;
+}
+.node .dot {
+  width: 54px; height: 54px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 21px; font-weight: 800; color: #fff;
+  background: var(--line); box-shadow: 0 4px 0 var(--line-strong);
+}
+.node.open .dot { background: var(--green); box-shadow: 0 4px 0 var(--green-dark); }
+.node.done .dot { background: var(--gold); box-shadow: 0 4px 0 #a97c13; }
+.node.locked { cursor: default; }
+.node.locked .dot { background: var(--surface-2); color: var(--ink-soft); box-shadow: 0 4px 0 var(--line); }
+.node:active:not(.locked) .dot { transform: translateY(4px); box-shadow: none; }
+.node .cap { font-size: 10.5px; color: var(--ink-soft); text-align: center; line-height: 1.25; }
+.node .crowns { font-size: 10px; color: var(--gold); letter-spacing: -1px; height: 12px; }
+
+/* -------------------------------------------------------------- exercise */
+
+.lessonbar {
+  display: flex; align-items: center; gap: 12px; padding: 10px var(--pad);
+  position: sticky; top: 0; background: var(--bg); z-index: 10;
+}
+.progress { flex: 1; height: 13px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+.progress-fill { height: 100%; width: 0; background: var(--green); border-radius: 99px; transition: width .3s; }
+
+.exercise {
+  padding: 8px var(--pad) 150px;
+  max-width: 620px; margin: 0 auto;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.ex-q { font-size: 19px; font-weight: 700; line-height: 1.35; }
+.ex-note { font-size: 13px; color: var(--ink-soft); margin: -8px 0 0; }
+
+.prompt-card {
+  background: var(--surface); border: 2px solid var(--line);
+  border-radius: var(--radius); padding: 18px 16px; text-align: center;
+  display: flex; flex-direction: column; gap: 6px; align-items: center;
+}
+.prompt-card .english { font-size: 20px; font-weight: 600; }
+
+.speak-btn {
+  width: 58px; height: 58px; border-radius: 16px; border: 0;
+  background: var(--blue); color: #fff; font-size: 24px; cursor: pointer;
+  box-shadow: 0 4px 0 #1f5f9f; flex: 0 0 58px;
+}
+.speak-btn.small { width: 42px; height: 42px; flex-basis: 42px; font-size: 18px; box-shadow: 0 3px 0 #1f5f9f; }
+.speak-btn:active { transform: translateY(3px); box-shadow: none; }
+.speak-row { display: flex; align-items: center; gap: 14px; justify-content: center; }
+
+.options { display: flex; flex-direction: column; gap: 10px; }
+.options.grid { display: grid; grid-template-columns: 1fr 1fr; }
+.opt {
+  background: var(--surface); border: 2px solid var(--line);
+  border-bottom-width: 4px;
+  border-radius: 14px; padding: 15px 14px; cursor: pointer;
+  text-align: center; font-size: 16px; min-height: 58px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+}
+.opt.big { font-size: 34px; }
+.opt .opt-roman { font-size: 12px; color: var(--ink-soft); font-style: italic; }
+.opt.sel { border-color: var(--blue); background: color-mix(in srgb, var(--blue) 12%, transparent); }
+.opt.right { border-color: var(--green); background: var(--green-soft); }
+.opt.wrong { border-color: var(--red); background: var(--red-soft); }
+.opt.gone { opacity: 0; pointer-events: none; transition: opacity .25s; }
+
+/* word-bank building */
+.answer-area {
+  min-height: 96px; border-top: 2px solid var(--line); border-bottom: 2px solid var(--line);
+  padding: 10px 4px; display: flex; flex-wrap: wrap; gap: 8px; align-content: flex-start;
+}
+.answer-area.rtl { direction: rtl; }
+.bank { display: flex; flex-wrap: wrap; gap: 8px; }
+.bank.rtl { direction: rtl; }
+.tile {
+  background: var(--surface); border: 2px solid var(--line); border-bottom-width: 4px;
+  border-radius: 11px; padding: 9px 13px; cursor: pointer; font-size: 17px;
+}
+.tile.used { opacity: 0; pointer-events: none; }
+.tile.ghost { visibility: hidden; }
+
+/* matching pairs */
+.match-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.match-col { display: flex; flex-direction: column; gap: 10px; }
+
+/* letter teaching */
+.letter-hero { text-align: center; display: flex; flex-direction: column; gap: 4px; align-items: center; }
+.letter-hero .big { font-size: 78px; line-height: 1.25; font-family: var(--font-naskh); }
+[data-script="nastaliq"] .letter-hero .big { font-family: var(--font-nastaliq); line-height: 1.5; }
+.letter-hero .lname { font-size: 20px; font-weight: 700; }
+.letter-hero .lsound { font-size: 14.5px; color: var(--ink-soft); max-width: 34ch; }
+.forms {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px;
+}
+.form-cell { text-align: center; display: flex; flex-direction: column; gap: 4px; }
+.form-cell .fc-glyph { font-size: 30px; font-family: var(--font-naskh); direction: rtl; min-height: 44px; }
+[data-script="nastaliq"] .form-cell .fc-glyph { font-family: var(--font-nastaliq); min-height: 52px; }
+.form-cell .fc-lbl { font-size: 10.5px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .4px; }
+.form-cell.none .fc-glyph { color: var(--ink-soft); font-size: 18px; opacity: .6; }
+
+/* ---------------------------------------------------------------- footer */
+
+.footer {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 15;
+  background: var(--bg); border-top: 1px solid var(--line);
+  padding: 12px var(--pad);
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0));
+}
+.footer > .big-btn { width: 100%; max-width: 588px; margin: 0 auto; display: block; }
+.feedback {
+  max-width: 588px; margin: 0 auto 12px;
+  /* An explanation can run to several lines; cap it and let it scroll rather
+     than letting the panel swallow the whole screen. */
+  max-height: 46vh; overflow-y: auto;
+}
+.feedback .fb-title { font-weight: 800; font-size: 17px; }
+.feedback .fb-body { font-size: 14px; margin-top: 4px; display: flex; flex-direction: column; gap: 7px; }
+
+.fb-answer { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.fb-answer-lbl {
+  font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px;
+  opacity: .7; flex: 0 0 auto;
+}
+
+/* Explanation lines mix English with Arabic or Urdu runs. Listing the script
+   font *after* the Latin one makes the browser fall back per glyph, so each
+   script is drawn in the right face without wrapping every word in markup. */
+.fb-line {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, var(--font-naskh), sans-serif;
+  /* Always an English sentence with script words inside it, so the base
+     direction is fixed rather than inferred from whatever comes first. */
+  line-height: 1.55; direction: ltr; unicode-bidi: isolate; text-align: left;
+  padding-left: 11px; border-left: 3px solid transparent;
+}
+[data-script="nastaliq"] .fb-line {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, var(--font-nastaliq), sans-serif;
+  line-height: 1.85;
+}
+.fb-line.chose { border-left-color: var(--red); }
+.fb-line.key   { border-left-color: var(--green); font-weight: 600; }
+.fb-line.note  { border-left-color: var(--line-strong); opacity: .85; font-size: 13px; }
+.fb-line.again { border-left-color: transparent; opacity: .6; font-size: 12px; font-style: italic; }
+.footer.ok { background: var(--green-soft); border-top-color: var(--green); }
+.footer.ok .fb-title { color: var(--green-dark); }
+.footer.no { background: var(--red-soft); border-top-color: var(--red); }
+.footer.no .fb-title { color: var(--red-dark); }
+@media (prefers-color-scheme: dark) {
+  .footer.ok .fb-title { color: var(--green); }
+  .footer.no .fb-title { color: var(--red); }
+}
+
+/* -------------------------------------------------------------- complete */
+
+.done-wrap {
+  min-height: 78vh; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 16px; padding: var(--pad); text-align: center;
+}
+.done-mark { font-size: 62px; color: var(--gold); }
+.done-mark.fail { color: var(--red); }
+.done-wrap h1 { font-size: 25px; }
+.done-stats { display: flex; gap: 10px; width: 100%; max-width: 420px; }
+.done-stat {
+  flex: 1; border: 2px solid var(--line); border-radius: 14px; overflow: hidden;
+}
+.done-stat .lbl { display: block; font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: #fff; padding: 4px; }
+.done-stat .val { display: block; font-size: 21px; font-weight: 800; padding: 9px 4px; }
+.done-stat.xp { border-color: var(--gold); } .done-stat.xp .lbl { background: var(--gold); }
+.done-stat.acc { border-color: var(--green); } .done-stat.acc .lbl { background: var(--green); }
+.done-stat.time { border-color: var(--blue); } .done-stat.time .lbl { background: var(--blue); }
+.done-wrap .big-btn { width: 100%; max-width: 420px; }
+.newwords { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 420px; }
+.newword { background: var(--surface-2); border-radius: 10px; padding: 6px 10px; font-size: 14px; }
+.newword.missed { background: var(--red-soft); }
+
+/* ----------------------------------------------------------- words list */
+
+.wordgroup { display: flex; flex-direction: column; gap: 6px; }
+.wordgroup > h2 { margin: 6px 0 2px; }
+.wordrow {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 12px; padding: 10px 12px;
+}
+.wordrow .wr-text { flex: 1; min-width: 0; }
+.wordrow .wr-en { font-size: 14px; }
+.wordrow .strength { display: flex; gap: 2px; }
+.wordrow .strength i { width: 5px; height: 14px; border-radius: 2px; background: var(--line); }
+.wordrow .strength i.on { background: var(--green); }
+
+.weaklist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+
+/* ---------------------------------------------------------------- banner */
+
+.banner {
+  position: fixed; left: 0; right: 0; z-index: 35;
+  bottom: calc(66px + env(safe-area-inset-bottom, 0));
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px var(--pad);
+  background: var(--green); color: #fff;
+  box-shadow: 0 -2px 12px rgba(0,0,0,.28);
+}
+.banner-text { flex: 1; font-size: 13.5px; font-weight: 600; line-height: 1.35; }
+.banner-act {
+  background: #fff; color: var(--green-dark); border: 0;
+  border-radius: 9px; padding: 9px 14px; font-weight: 800; font-size: 13px; cursor: pointer;
+}
+.banner-x { background: none; border: 0; color: #fff; font-size: 20px; opacity: .8; cursor: pointer; padding: 4px 6px; }
+
+/* ----------------------------------------------------------------- sheet */
+
+.sheet { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,.45); display: flex; align-items: flex-end; justify-content: center; }
+.sheet-inner {
+  background: var(--bg); width: 100%; max-width: 560px;
+  border-radius: 20px 20px 0 0; padding: 20px var(--pad);
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0));
+  max-height: 88vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
+}
+.course-opt {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  background: var(--surface); border: 2px solid var(--line); border-radius: 14px;
+  padding: 14px; cursor: pointer; margin-bottom: 8px;
+}
+.course-opt.on { border-color: var(--green); background: var(--green-soft); }
+.course-opt .co-native { font-size: 26px; font-family: var(--font-naskh); direction: rtl; }
+.course-opt .co-name { font-weight: 700; }
+.course-opt .co-sub { font-size: 12.5px; color: var(--ink-soft); }
+
+/* ------------------------------------------------- unfolded / wide screen */
+
+@media (min-width: 680px) {
+  .exercise { padding-bottom: 170px; }
+  .options.grid { grid-template-columns: repeat(2, 1fr); }
+  .unit-nodes { gap: 14px; }
+}
