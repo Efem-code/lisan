@@ -11,24 +11,27 @@ No account, no subscription, no network. Everything runs on the phone.
 
 ## Getting it onto the phone
 
+The app lives at **<https://efem-code.github.io/lisan/>**.
+
+Open that on the phone **in Chrome** and tap the **Install** button along the
+bottom. It gets its own icon and opens fullscreen, with no browser bar.
+
+It has to be Chrome — Brave only creates a home-screen shortcut that opens in a
+browser tab. And it has to be the https address rather than localhost, because
+Android's install machinery keys on hostname and ignores the port, so everything
+served from `localhost` collides. The Gambit README has the long version.
+
+To push a change:
+
 ```bash
-./phone.sh
+./deploy.sh
 ```
 
-Then on the phone, in your browser's **⋮ menu → Add to Home screen** (Brave) or
-**Install app** (Chrome). Unplug once it has loaded; it works offline from then
-on. Re-run `./phone.sh` to push an update — the service worker picks it up on the
-next launch.
+Stamps a new build into `sw.js`, commits and pushes. Open the app afterwards and
+it reloads itself onto the new version — no cable, no reinstall.
 
-The cable is needed because `adb reverse` makes the Mac's server reachable from
-the phone on loopback, and browsers only allow service workers and home-screen
-installs on secure origins. Loopback counts; a Wi-Fi address like `192.168.1.20`
-does not.
-
-The URL is `http://lisan.localhost:8779` rather than plain `localhost`, because
-an installed web app claims its whole host on Android regardless of port — one
-app on plain `localhost` will otherwise intercept every other one. The Gambit
-README has the longer version.
+`./phone.sh` still serves the folder over USB at `http://lisan.localhost:8779`
+for testing a change before deploying it.
 
 ---
 
