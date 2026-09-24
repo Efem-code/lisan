@@ -78,12 +78,14 @@ function scriptBlock(text, roman, size) {
 /* The same, plus the plain-English respelling. Used only where something is
    being taught — never on a question, where it would give the answer away and
    undo the point of switching romanisation off. */
-function teachBlock(text, roman, size) {
+function teachBlock(item, size) {
   var wrap = el('div');
-  wrap.appendChild(el('div', 'script ' + (size || 'lg'), text));
-  var say = Pron.respell(roman);
+  wrap.appendChild(el('div', 'script ' + (size || 'lg'), item.t));
+  /* forItem picks the engine for this language, or returns the explicit
+     respelling the course carries where deriving one would be wrong. */
+  var say = Pron.forItem(course, item);
   if (say) wrap.appendChild(el('div', 'pron', say));
-  if (roman && Store.settings().showRoman) wrap.appendChild(el('div', 'roman', roman));
+  if (item.r && Store.settings().showRoman) wrap.appendChild(el('div', 'roman', item.r));
   return wrap;
 }
 
@@ -268,12 +270,12 @@ RENDERERS.wordIntro = function (ex, box) {
   box.appendChild(el('div', 'ex-q', 'New word'));
   var card = el('div', 'prompt-card');
   var row = el('div', 'speak-row');
-  row.appendChild(teachBlock(ex.word.t, ex.word.r, 'xl'));
+  row.appendChild(teachBlock(ex.word, 'xl'));
   if (canSpeak()) row.appendChild(speakPair(ex.word.t));
   card.appendChild(row);
   card.appendChild(el('div', 'english', ex.word.e));
   box.appendChild(card);
-  var tips = soundTips(ex.word.r);
+  var tips = course.romanized ? soundTips(ex.word.r) : null;
   if (tips) box.appendChild(tips);
   if (ex.word.n) box.appendChild(el('p', 'ex-note', ex.word.n));
   if (LS.newItems.indexOf(ex.word.t) < 0) LS.newItems.push(ex.word.t);
@@ -283,12 +285,12 @@ RENDERERS.sentenceIntro = function (ex, box) {
   box.appendChild(el('div', 'ex-q', 'New sentence'));
   var card = el('div', 'prompt-card');
   var row = el('div', 'speak-row');
-  row.appendChild(teachBlock(ex.sentence.t, ex.sentence.r, 'lg'));
+  row.appendChild(teachBlock(ex.sentence, 'lg'));
   if (canSpeak()) row.appendChild(speakPair(ex.sentence.t));
   card.appendChild(row);
   card.appendChild(el('div', 'english', ex.sentence.e));
   box.appendChild(card);
-  var stips = soundTips(ex.sentence.r);
+  var stips = course.romanized ? soundTips(ex.sentence.r) : null;
   if (stips) box.appendChild(stips);
   if (ex.sentence.n) box.appendChild(el('p', 'ex-note', ex.sentence.n));
 };
@@ -306,12 +308,32 @@ RENDERERS.letterIntro = function (ex, box) {
   box.appendChild(hero);
 
   box.appendChild(formsGrid(l));
-  box.appendChild(el('p', 'ex-note', l.connects === 'right'
-    ? 'This letter never joins to the letter after it, so it has no start or middle form. A word simply breaks after it.'
-    : 'The same letter, in the four places it can sit in a word.'));
+  box.appendChild(el('p', 'ex-note',
+    l.kind === 'jamo'
+      ? 'Hangul letters keep one shape. They are stacked into square syllable blocks rather than written in a line.'
+    : l.connects === 'right'
+      ? 'This letter never joins to the letter after it, so it has no start or middle form. A word simply breaks after it.'
+      : 'The same letter, in the four places it can sit in a word.'));
 };
 
 function formsGrid(l) {
+  /* Hangul has no joining forms to show. What a learner actually needs is
+     worked examples of the letter inside a syllable block, which is the part
+     that looks alien coming from an alphabet written in a line. */
+  if (l.kind === 'jamo') {
+    var g = el('div', 'forms');
+    var alone = el('div', 'form-cell');
+    alone.appendChild(el('div', 'fc-glyph', l.ch));
+    alone.appendChild(el('div', 'fc-lbl', 'Alone'));
+    g.appendChild(alone);
+    (l.blocks || []).forEach(function (b) {
+      var cell = el('div', 'form-cell');
+      cell.appendChild(el('div', 'fc-glyph', b.b));
+      cell.appendChild(el('div', 'fc-lbl', b.r));
+      g.appendChild(cell);
+    });
+    return g;
+  }
   var grid = el('div', 'forms');
   [['isolated', 'Alone'], ['initial', 'Start'], ['medial', 'Middle'], ['final', 'End']].forEach(function (pair) {
     var cell = el('div', 'form-cell' + (l[pair[0]] ? '' : ' none'));
@@ -614,8 +636,9 @@ function showFeedback(correct, expected, ex, chosen, given) {
     var needsScript = ex.type === 'build' ? ex.direction === 'target'
       : !!(ex.options && ex.options[0] && ex.options[0].script);
     answer.appendChild(el('span', needsScript ? 'script md' : '', expected));
-    var wrongRoman = (ex.word && ex.word.r) || (ex.sentence && ex.sentence.r) || '';
-    if (wrongRoman) answer.appendChild(el('span', 'pron sm', Pron.respell(wrongRoman)));
+    var subject = ex.word || ex.sentence || null;
+    var sayIt = subject ? Pron.forItem(course, subject) : '';
+    if (sayIt) answer.appendChild(el('span', 'pron sm', sayIt));
     body.appendChild(answer);
 
     why.lines.forEach(function (line) {
@@ -764,7 +787,7 @@ function renderWords() {
         total++;
         var st = c.items[w.t];
         if (st) met++;
-        rows.push({ t: w.t, e: w.e, r: w.r, st: st, speak: w.t });
+        rows.push({ t: w.t, e: w.e, r: w.r, st: st, speak: w.t, item: w });
       });
     }
     if (!rows.length) return;
@@ -775,7 +798,8 @@ function renderWords() {
       if (canSpeak()) li.appendChild(speakButton(row.speak, true));
       var txt = el('div', 'wr-text');
       txt.appendChild(el('div', 'script md', row.t));
-      if (row.r) txt.appendChild(el('div', 'pron sm', Pron.respell(row.r)));
+      var pron = row.item ? Pron.forItem(course, row.item) : '';
+      if (pron) txt.appendChild(el('div', 'pron sm', pron));
       if (row.r && Store.settings().showRoman) txt.appendChild(el('div', 'roman', row.r));
       txt.appendChild(el('div', 'wr-en', row.e));
       li.appendChild(txt);
@@ -822,7 +846,7 @@ function openCourseSheet() {
   Courses.ALL.forEach(function (c) {
     var prog = Store.courseProgress(c.id, Lesson.planCourse(c));
     var b = el('button', 'course-opt' + (c.id === course.id ? ' on' : ''));
-    b.appendChild(el('div', 'co-native', c.native));
+    b.appendChild(el('div', 'co-native ' + c.script, c.native));
     var txt = el('div');
     txt.appendChild(el('div', 'co-name', c.name));
     txt.appendChild(el('div', 'co-sub', c.blurb));

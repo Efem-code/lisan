@@ -18,14 +18,18 @@
 var Explain = (function () {
 'use strict';
 
-/* What tends to go wrong with word order, per language. Used when someone
-   builds a sentence out of the right words in the wrong order. */
-var WORD_ORDER = {
-  ar: 'Arabic puts the adjective after the noun — البَيْتُ كَبير is literally ' +
-      '"the house big" — and there is no word for "is" in the present tense.',
-  ur: 'Urdu puts the verb at the very end, after everything else — ' +
-      'میں چائے پیتا ہوں is literally "I tea drink".'
-};
+/* Word order advice comes from the course itself, so each language explains
+   its own habits rather than this file keeping a second copy that can drift. */
+function wordOrderOf(course) {
+  return (course.grammar && course.grammar.wordOrder) || '';
+}
+
+/* The articles a language uses, for spotting a gender mistake. */
+function articlesOf(course) {
+  var a = course.grammar && course.grammar.articles;
+  if (!a) return [];
+  return Object.keys(a).map(function (k) { return a[k]; });
+}
 
 var SEP = '|~|';
 
@@ -139,6 +143,15 @@ function explainWords(course, chosenWord, correctWord, chosenLabel) {
       lines.push({ kind: 'note', text: text });
     }
   }
+  if (chosenWord && correctWord && chosenWord.g && correctWord.g && chosenWord.g !== correctWord.g &&
+      course.grammar && course.grammar.articles) {
+    var a = course.grammar.articles;
+    lines.push({
+      kind: 'note',
+      text: 'Different genders, so different articles: ' + iso(correctWord.t) + ' takes ' +
+            iso(a[correctWord.g] || '') + ', ' + iso(chosenWord.t) + ' takes ' + iso(a[chosenWord.g] || '') + '.'
+    });
+  }
   if (correctWord && correctWord.n) lines.push({ kind: 'note', text: correctWord.n });
   return lines;
 }
@@ -158,8 +171,8 @@ function explainBuild(course, ex, given) {
     lines.push({ kind: 'chose', text: 'Every word was right — only the order was wrong.' });
     lines.push({
       kind: 'key',
-      text: (ex.direction === 'target' && WORD_ORDER[course.id])
-        ? WORD_ORDER[course.id]
+      text: (ex.direction === 'target' && wordOrderOf(course))
+        ? wordOrderOf(course)
         : 'Read the answer back and notice where each word sits relative to the others.'
     });
     return lines;
@@ -168,6 +181,22 @@ function explainBuild(course, ex, given) {
   var L = lookups(course);
   var missing = answer.filter(function (w) { return given.indexOf(w) < 0; });
   var extra = given.filter(function (w) { return answer.indexOf(w) < 0; });
+
+  /* One article swapped for another is not a vocabulary slip, it is a gender
+     mistake, and saying so is far more useful than "that word does not
+     belong here". */
+  var arts = articlesOf(course);
+  if (missing.length === 1 && extra.length === 1 &&
+      arts.indexOf(missing[0]) >= 0 && arts.indexOf(extra[0]) >= 0) {
+    lines.push({
+      kind: 'chose',
+      text: iso(extra[0]) + ' is the wrong gender here — the word takes ' + iso(missing[0]) + '.'
+    });
+    if (course.grammar && course.grammar.genderNote) {
+      lines.push({ kind: 'key', text: course.grammar.genderNote });
+    }
+    return lines;
+  }
 
   extra.forEach(function (w) {
     var word = L.byTarget[w];
@@ -252,7 +281,7 @@ function wrong(ctx) {
   return { headline: 'Not quite', lines: explainWords(course, chosenWord, correctWord, ctx.chosenLabel) };
 }
 
-return { wrong: wrong, iso: iso, WORD_ORDER: WORD_ORDER, singleLetterDiff: singleLetterDiff, lookups: lookups };
+return { wrong: wrong, iso: iso, wordOrderOf: wordOrderOf, singleLetterDiff: singleLetterDiff, lookups: lookups };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = Explain;

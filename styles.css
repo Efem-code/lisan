@@ -28,6 +28,7 @@
   --pad: 16px;
   --font-naskh: 'Noto Naskh Arabic', 'Amiri', 'Traditional Arabic', 'Geeza Pro', 'Arabic Typesetting', serif;
   --font-nastaliq: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', 'Nafees Nastaleeq', 'Noto Naskh Arabic', serif;
+  --font-hangul: 'Noto Sans KR', 'Noto Sans CJK KR', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -68,9 +69,20 @@ h2 { font-size: 15px; margin: 0; }
 
 /* ---------------------------------------------------------------- script */
 
-.script { font-family: var(--font-naskh); direction: rtl; unicode-bidi: isolate; line-height: 1.7; }
+/* `.script` means "the target language as it is written". For a Latin-script
+   course that is just text, so the default is plain and left-to-right; the
+   Arabic, Urdu and Korean faces are layered on by the data-script attribute.
+   Defaulting to RTL here was fine when the only courses were Arabic and Urdu
+   and wrong the moment a fifth language arrived. */
+.script { font-family: inherit; direction: ltr; unicode-bidi: isolate; line-height: 1.35; }
+[data-script="naskh"] .script {
+  font-family: var(--font-naskh); direction: rtl; line-height: 1.7;
+}
+[data-script="hangul"] .script {
+  font-family: var(--font-hangul); line-height: 1.5;
+}
 [data-script="nastaliq"] .script {
-  font-family: var(--font-nastaliq);
+  font-family: var(--font-nastaliq); direction: rtl;
   /* Nastaliq descends steeply; without the extra room the tails are cut off. */
   line-height: 2.05;
   padding-block: .22em;
@@ -92,7 +104,7 @@ h2 { font-size: 15px; margin: 0; }
 .sound-tips .st-head { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; color: var(--ink-soft); }
 .sound-tip { display: flex; gap: 10px; align-items: baseline; font-size: 13.5px; }
 .sound-tip .st-sym {
-  font-family: var(--font-naskh); font-size: 17px; font-weight: 700; color: var(--blue);
+  font-size: 17px; font-weight: 700; color: var(--blue);
   min-width: 1.6em; text-align: center; flex: 0 0 auto;
 }
 .speak-btn.slow {
@@ -122,7 +134,9 @@ h2 { font-size: 15px; margin: 0; }
 }
 .course-chip { flex: 1; min-width: 0; }
 .course-chip span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#course-flag { font-family: var(--font-naskh); font-size: 17px; }
+#course-flag { font-size: 17px; }
+[data-script="naskh"] #course-flag { font-family: var(--font-naskh); direction: rtl; }
+[data-script="nastaliq"] #course-flag { font-family: var(--font-nastaliq); direction: rtl; }
 
 .stats { display: flex; gap: 10px; align-items: center; }
 .stat { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 3px; white-space: nowrap; }
@@ -285,16 +299,20 @@ select {
 
 /* letter teaching */
 .letter-hero { text-align: center; display: flex; flex-direction: column; gap: 4px; align-items: center; }
-.letter-hero .big { font-size: 78px; line-height: 1.25; font-family: var(--font-naskh); }
+.letter-hero .big { font-size: 78px; line-height: 1.25; }
+[data-script="naskh"] .letter-hero .big { font-family: var(--font-naskh); }
+[data-script="hangul"] .letter-hero .big { font-family: var(--font-hangul); }
 [data-script="nastaliq"] .letter-hero .big { font-family: var(--font-nastaliq); line-height: 1.5; }
 .letter-hero .lname { font-size: 20px; font-weight: 700; }
 .letter-hero .lsound { font-size: 14.5px; color: var(--ink-soft); max-width: 34ch; }
 .forms {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)); gap: 8px;
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px;
 }
 .form-cell { text-align: center; display: flex; flex-direction: column; gap: 4px; }
-.form-cell .fc-glyph { font-size: 30px; font-family: var(--font-naskh); direction: rtl; min-height: 44px; }
+.form-cell .fc-glyph { font-size: 30px; min-height: 44px; }
+[data-script="naskh"] .form-cell .fc-glyph { font-family: var(--font-naskh); direction: rtl; }
+[data-script="hangul"] .form-cell .fc-glyph { font-family: var(--font-hangul); font-size: 34px; }
 [data-script="nastaliq"] .form-cell .fc-glyph { font-family: var(--font-nastaliq); min-height: 52px; }
 .form-cell .fc-lbl { font-size: 10.5px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .4px; }
 .form-cell.none .fc-glyph { color: var(--ink-soft); font-size: 18px; opacity: .6; }
@@ -336,6 +354,9 @@ select {
 [data-script="nastaliq"] .fb-line {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, var(--font-nastaliq), sans-serif;
   line-height: 1.85;
+}
+[data-script="hangul"] .fb-line {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, var(--font-hangul), sans-serif;
 }
 .fb-line.chose { border-left-color: var(--red); }
 .fb-line.key   { border-left-color: var(--green); font-weight: 600; }
@@ -422,7 +443,16 @@ select {
   padding: 14px; cursor: pointer; margin-bottom: 8px;
 }
 .course-opt.on { border-color: var(--green); background: var(--green-soft); }
-.course-opt .co-native { font-size: 26px; font-family: var(--font-naskh); direction: rtl; }
+/* The native name is a flex item beside the description. Without flex:0 0 auto
+   it shrinks to its min-width and the text spills over the description —
+   invisible with a two-letter Arabic name, obvious with "Français". */
+.course-opt .co-native {
+  font-size: 20px; flex: 0 0 auto; min-width: 2.4em; max-width: 5em;
+  text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.course-opt .co-native.naskh { font-family: var(--font-naskh); direction: rtl; font-size: 24px; }
+.course-opt .co-native.nastaliq { font-family: var(--font-nastaliq); direction: rtl; font-size: 26px; }
+.course-opt .co-native.hangul { font-family: var(--font-hangul); font-size: 22px; }
 .course-opt .co-name { font-weight: 700; }
 .course-opt .co-sub { font-size: 12.5px; color: var(--ink-soft); }
 

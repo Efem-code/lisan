@@ -20,6 +20,12 @@ var ZWJ = '‍';
 /* connects: 'both' joins on either side; 'right' only joins to the letter
    before it, so nothing after it can connect back. */
 function forms(ch, connects) {
+  /* Hangul letters keep one shape wherever they sit. They do have positions —
+     a jamo is an initial, a vowel or a final inside its syllable block — but
+     that is a position, not a different glyph, so there are no forms to show. */
+  if (connects === 'none') {
+    return { isolated: ch, initial: null, medial: null, final: null };
+  }
   if (connects === 'right') {
     return { isolated: ch, initial: null, medial: null, final: ZWJ + ch };
   }
@@ -115,6 +121,84 @@ var URDU = [
 ];
 
 
+
+/* ------------------------------------------------------------------ Hangul */
+
+/* Hangul is not an alphabet that happens to look different — it is built on a
+   different principle. The letters are grouped by where they are made in the
+   mouth, and within a group a stroke is *added* to mean "more air" and the
+   letter is *doubled* to mean "tense". ㄱ, ㅋ and ㄲ are the same shape three
+   times over. Recording that turns a wrong answer into a real explanation
+   rather than "no, it was the other one".
+ *
+ * Letters are written in syllable blocks rather than in a line: 한 is ㅎ + ㅏ
+ * + ㄴ stacked into one square. `blocks` holds worked examples of that, which
+ * is what the alphabet lessons show in place of the joining forms that Arabic
+ * and Urdu need. */
+function K(ch, name, roman, sound, family, mark, blocks) {
+  var f = forms(ch, 'none');
+  return {
+    ch: ch, name: name, roman: roman, sound: sound,
+    connects: 'none', kind: 'jamo',
+    family: family, mark: mark, blocks: blocks || [],
+    isolated: f.isolated, initial: null, medial: null, final: null
+  };
+}
+
+var KOREAN = [
+  /* consonants */
+  K('ㄱ', 'giyeok', 'g', 'Between g and k. At the start of a word it sounds closer to k.',
+    'velar', 'the plain one — one stroke', [{ b: '가', r: 'ga' }, { b: '국', r: 'guk' }]),
+  K('ㄴ', 'nieun', 'n', 'n, as in now.',
+    'alveolar-n', 'a single bent stroke', [{ b: '나', r: 'na' }, { b: '문', r: 'mun' }]),
+  K('ㄷ', 'digeut', 'd', 'Between d and t.',
+    'alveolar', 'the plain one — ㄴ with a lid', [{ b: '다', r: 'da' }, { b: '듣', r: 'deut' }]),
+  K('ㄹ', 'rieul', 'r', 'Between r and l — a light tap, closer to the r in Spanish pero.',
+    'liquid', 'a single zigzag', [{ b: '라', r: 'ra' }, { b: '물', r: 'mul' }]),
+  K('ㅁ', 'mieum', 'm', 'm, as in moon.',
+    'bilabial-m', 'a closed square', [{ b: '마', r: 'ma' }, { b: '밤', r: 'bam' }]),
+  K('ㅂ', 'bieup', 'b', 'Between b and p.',
+    'bilabial', 'the plain one — an open box', [{ b: '바', r: 'ba' }, { b: '밥', r: 'bap' }]),
+  K('ㅅ', 'siot', 's', 's, as in sun. Before ㅣ it softens towards sh.',
+    'sibilant', 'the plain one — a tent', [{ b: '사', r: 'sa' }, { b: '옷', r: 'ot' }]),
+  K('ㅇ', 'ieung', 'ng', 'Silent at the start of a block, ng at the end. It is a placeholder when a block begins with a vowel.',
+    'ieung', 'a circle', [{ b: '아', r: 'a' }, { b: '강', r: 'gang' }]),
+  K('ㅈ', 'jieut', 'j', 'j, as in jam.',
+    'affricate', 'the plain one — ㅅ with a lid', [{ b: '자', r: 'ja' }, { b: '낮', r: 'nat' }]),
+  K('ㅊ', 'chieut', 'ch', 'ch, as in chair — ㅈ with a puff of air.',
+    'affricate', 'ㅈ plus a stroke on top = more air', [{ b: '차', r: 'cha' }]),
+  K('ㅋ', 'kieuk', 'k', 'A hard k with a puff of air.',
+    'velar', 'ㄱ plus a stroke = more air', [{ b: '카', r: 'ka' }]),
+  K('ㅌ', 'tieut', 't', 'A hard t with a puff of air.',
+    'alveolar', 'ㄷ plus a stroke = more air', [{ b: '타', r: 'ta' }]),
+  K('ㅍ', 'pieup', 'p', 'A hard p with a puff of air.',
+    'bilabial', 'ㅂ opened out = more air', [{ b: '파', r: 'pa' }]),
+  K('ㅎ', 'hieut', 'h', 'h, as in hat.',
+    'h', 'a circle with a hat', [{ b: '하', r: 'ha' }, { b: '한', r: 'han' }]),
+
+  /* vowels */
+  K('ㅏ', 'a', 'a', 'a, as in father.',
+    'vowel-a', 'a vertical line with a stroke to the right', [{ b: '아', r: 'a' }, { b: '나', r: 'na' }]),
+  K('ㅑ', 'ya', 'ya', 'ya, as in yard.',
+    'vowel-a', 'ㅏ with two strokes = a y in front', [{ b: '야', r: 'ya' }]),
+  K('ㅓ', 'eo', 'eo', 'The u in "cup". Not a long o — the spelling is misleading.',
+    'vowel-eo', 'a vertical line with a stroke to the left', [{ b: '어', r: 'eo' }, { b: '먹', r: 'meok' }]),
+  K('ㅕ', 'yeo', 'yeo', 'y plus the u in "cup".',
+    'vowel-eo', 'ㅓ with two strokes = a y in front', [{ b: '여', r: 'yeo' }]),
+  K('ㅗ', 'o', 'o', 'o, as in more.',
+    'vowel-o', 'a horizontal line with a stroke above', [{ b: '오', r: 'o' }, { b: '몸', r: 'mom' }]),
+  K('ㅛ', 'yo', 'yo', 'yo, as in yodel.',
+    'vowel-o', 'ㅗ with two strokes = a y in front', [{ b: '요', r: 'yo' }]),
+  K('ㅜ', 'u', 'u', 'oo, as in moon.',
+    'vowel-u', 'a horizontal line with a stroke below', [{ b: '우', r: 'u' }, { b: '문', r: 'mun' }]),
+  K('ㅠ', 'yu', 'yu', 'yu, as in you.',
+    'vowel-u', 'ㅜ with two strokes = a y in front', [{ b: '유', r: 'yu' }]),
+  K('ㅡ', 'eu', 'eu', 'Say "oo" but with your lips flat and spread, not rounded.',
+    'vowel-eu', 'a bare horizontal line', [{ b: '으', r: 'eu' }, { b: '글', r: 'geul' }]),
+  K('ㅣ', 'i', 'i', 'ee, as in see.',
+    'vowel-i', 'a bare vertical line', [{ b: '이', r: 'i' }, { b: '김', r: 'gim' }])
+];
+
 /* ------------------------------------------------- shape families and marks */
 
 /* Most letters in both scripts are the same skeleton wearing different dots.
@@ -192,7 +276,11 @@ var CONFUSABLE = [
   ['س', 'ش'], ['ص', 'ض'], ['ط', 'ظ'], ['ع', 'غ'], ['ف', 'ق']
 ];
 
-function get(lang) { return lang === 'ur' ? URDU : ARABIC; }
+var SETS = { ar: ARABIC, ur: URDU, ko: KOREAN };
+
+/* Courses with no writing system to teach get an empty list rather than a
+   wrong one. */
+function get(lang) { return SETS[lang] || []; }
 
 /* Split into lesson-sized groups, keeping look-alike letters together. */
 function groups(lang, size) {
@@ -219,7 +307,8 @@ function spell(lang, word) {
 }
 
 return {
-  ARABIC: ARABIC, URDU: URDU, CONFUSABLE: CONFUSABLE, ZWJ: ZWJ, MARKS: MARKS,
+  ARABIC: ARABIC, URDU: URDU, KOREAN: KOREAN, SETS: SETS,
+  CONFUSABLE: CONFUSABLE, ZWJ: ZWJ, MARKS: MARKS,
   get: get, groups: groups, byChar: byChar, spell: spell, forms: forms, family: family
 };
 })();
