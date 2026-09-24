@@ -12,7 +12,10 @@ var KEY = 'lisan.v1';
 var DEFAULTS = {
   settings: {
     course: 'ar', showRoman: true, sound: true, haptics: true,
-    dailyGoal: 30, speakRate: 0.75, listening: true
+    dailyGoal: 30, speakRate: 0.75, listening: true,
+    /* Off by default on purpose: scoring streams your voice to Google, which
+       is the only part of this app that leaves the phone. */
+    speaking: false
   },
   streak: 0,
   lastActiveDay: null,

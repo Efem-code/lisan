@@ -112,6 +112,37 @@ deliberate:
   keeping the article and izafat hyphens, and hand the consonants English does
   not have to the sound notes rather than flattening them into a nearest miss.
 
+**Speaking practice.** Off by default; switch it on in Settings. About one
+exercise in ten then becomes "say this out loud": the word, its respelling, a
+model to listen to, and a microphone button.
+
+A wrong attempt is explained the way the rest of the app explains things —
+what came through, and which word did not land:
+
+> **Not quite there**
+> TARGET · **adiós** · ah-DYOHS
+> What came through: "buenas noches"
+> This word did not land: adiós
+> *The recogniser is not judging your accent — it only reports the words it
+> matched. Play the model again and copy the rhythm, not just the sounds.*
+
+Matching is deliberately forgiving in the right places. Recognition never
+returns Arabic vowel marks, so `صباح الخير` heard against the course's fully
+vowelled `صَباحُ الخَيْر` scores a perfect match rather than a flat zero; Spanish
+accents and inverted punctuation are normalised away; German ß matches ss. The
+comparison is a character-distance score, so most of a word right shows as most
+of a word right, and the recogniser's alternative guesses are all checked
+because its first guess is often a common word that merely sounds similar.
+
+**It is the one thing in this app that leaves your phone.** Chrome does not
+transcribe on the device — it streams the audio to Google and sends back text.
+That is why the feature is off until you turn it on, why the setting says so in
+plain words, and why there is an offline fallback: with no signal, or in a
+browser that cannot score, it records you and plays it back against the model.
+That part is entirely local and is closer to how anyone actually drills
+pronunciation. Every spoken exercise also has a **Skip** button, because you
+will not always be somewhere you can talk.
+
 **Practice** pulls whatever is weakest or most overdue. Each item tracks its own
 strength 0–5; a correct answer pushes the next review out (4 hours → 1 day → 3
 days → 1 week → 3 weeks), a wrong one drops it back to the start.
@@ -134,6 +165,12 @@ Settings sheet says which voice it found.
 **Urdu needs a Nastaliq font to look right**, and Korean a CJK font. Samsung
 devices normally ship both. If yours does not, Urdu falls back to Naskh — still
 readable, just not how Urdu is normally set.
+
+**Speech scoring is not accent scoring.** The recogniser reports which words it
+matched, nothing more. You can be understood while sounding foreign, and you can
+be marked wrong for a perfectly good accent the model was not expecting. Treat a
+pass as "that was intelligible", not "that was native", and use the record-and-
+compare drill for the finer work.
 
 **Gender is taught but not drilled hard.** Spanish, French and German nouns are
 always introduced with their article, and a wrong article in a built sentence is
@@ -216,6 +253,7 @@ console.log(n + ' exercises generated, ' + bad + ' problems');
 | `course-*.js` | One file per language — words, sentences and grammar notes |
 | `lesson.js` | Turns content into exercises; the spaced-repetition schedule; re-asking |
 | `pron.js` | Per-language pronunciation: derived for Spanish and German, stored for French and Korean, converted for Arabic and Urdu |
+| `speech.js` | Speaking practice: recognition, matching, and local recording |
 | `explain.js` | Turns a wrong answer into an explanation |
 | `tts.js` | Device speech, and deciding whether a usable voice exists |
 | `store.js` | localStorage: progress, streak, XP |

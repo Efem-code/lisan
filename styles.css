@@ -293,6 +293,31 @@ select {
 .tile.used { opacity: 0; pointer-events: none; }
 .tile.ghost { visibility: hidden; }
 
+/* speaking practice */
+.mic-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.mic-btn {
+  width: 96px; height: 96px; border-radius: 50%; border: 0;
+  background: var(--red); color: #fff; font-size: 38px; cursor: pointer;
+  box-shadow: 0 5px 0 var(--red-dark);
+  display: grid; place-items: center;
+}
+.mic-btn:active:not(:disabled) { transform: translateY(5px); box-shadow: none; }
+.mic-btn:disabled { opacity: .5; }
+/* A pulse while it is listening, so it is obvious the mic is live. */
+.mic-btn.live { animation: micpulse 1.1s ease-in-out infinite; }
+@keyframes micpulse {
+  0%, 100% { box-shadow: 0 5px 0 var(--red-dark), 0 0 0 0 color-mix(in srgb, var(--red) 55%, transparent); }
+  50%      { box-shadow: 0 5px 0 var(--red-dark), 0 0 0 18px color-mix(in srgb, var(--red) 0%, transparent); }
+}
+.mic-status { font-size: 14px; color: var(--ink-soft); text-align: center; min-height: 40px; max-width: 30ch; }
+.mic-heard { font-size: 18px; font-weight: 600; color: var(--ink); }
+.mic-alt { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.mic-alt .big-btn { padding: 10px 14px; font-size: 12px; }
+.mic-scorebar { width: 100%; max-width: 280px; height: 10px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+.mic-scorebar i { display: block; height: 100%; background: var(--green); width: 0; transition: width .4s; }
+.mic-scorebar.low i { background: var(--red); }
+.mic-scorebar.mid i { background: var(--gold); }
+
 /* matching pairs */
 .match-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .match-col { display: flex; flex-direction: column; gap: 10px; }

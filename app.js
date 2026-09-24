@@ -59,6 +59,12 @@ function buzz(ms) {
 function canSpeak() {
   return Store.settings().listening && TTS.available(course.speech);
 }
+
+/* Speaking exercises need either a scorer or a recorder — the recorder alone
+   still gives the record-and-compare drill, which works offline. */
+function canPractiseSpeaking() {
+  return Store.settings().speaking && (Speech.canScore() || Speech.canRecord());
+}
 function say(text, slow) {
   if (!text) return;
   /* The slow reading is much slower than the "slow" setting: it is for picking
@@ -204,9 +210,10 @@ function renderPath() {
 var LS = null;
 
 function startLesson(node, practice) {
+  var opts = { canSpeak: canSpeak(), speaking: canPractiseSpeaking() };
   var exercises = practice
-    ? Lesson.buildPractice(course, Store.course(course.id), { canSpeak: canSpeak() })
-    : Lesson.buildExercises(course, node.spec, { canSpeak: canSpeak() });
+    ? Lesson.buildPractice(course, Store.course(course.id), opts)
+    : Lesson.buildExercises(course, node.spec, opts);
 
   if (!exercises.length) {
     alert('Nothing to practise yet — finish a lesson first.');
@@ -254,7 +261,7 @@ function renderExercise() {
   }
   /* A matching grid advances itself when the last pair clears, so a Check
      button there is a dead control that only invites tapping. */
-  check.hidden = ex.type === 'match';
+  check.hidden = ex.type === 'match' || ex.type === 'speak';
 
   var render = RENDERERS[ex.type];
   if (render) render(ex, box);
@@ -466,6 +473,128 @@ RENDERERS.build = function (ex, box) {
   refresh();
 };
 
+RENDERERS.speak = function (ex, box) {
+  var subject = ex.word || ex.sentence;
+  box.appendChild(el('div', 'ex-q', ex.question));
+
+  var card = el('div', 'prompt-card');
+  var row = el('div', 'speak-row');
+  row.appendChild(teachBlock(subject, ex.sentence ? 'lg' : 'xl'));
+  if (canSpeak()) row.appendChild(speakPair(subject.t));
+  card.appendChild(row);
+  card.appendChild(el('div', 'english', subject.e));
+  box.appendChild(card);
+
+  var wrap = el('div', 'mic-wrap');
+  var mic = el('button', 'mic-btn', '\u{1F3A4}');
+  mic.setAttribute('aria-label', 'Speak');
+  var status = el('div', 'mic-status', Speech.canScore()
+    ? 'Tap, then say it straight away.'
+    : 'Record yourself and compare with the model.');
+  var alt = el('div', 'mic-alt');
+  wrap.appendChild(mic); wrap.appendChild(status); wrap.appendChild(alt);
+  box.appendChild(wrap);
+
+  var handle = null, listening = false;
+
+  function startScored() {
+    listening = true;
+    mic.classList.add('live');
+    status.textContent = 'Listening\u2026';
+    handle = Speech.listen({
+      lang: Speech.langFor(course),
+      target: subject.t,
+      courseId: course.id,
+      onInterim: function (t) { if (t) status.textContent = t; },
+      onResult: function (r) {
+        listening = false; mic.classList.remove('live');
+        resolveSpeak(ex, subject, r.text, r.score);
+      },
+      onError: function (kind) {
+        listening = false; mic.classList.remove('live');
+        status.textContent = Speech.errorText(kind);
+        /* If scoring cannot work here at all, offer the offline drill rather
+           than leaving a dead end. */
+        if (kind === 'network' || kind === 'unsupported') offerCompare();
+      }
+    });
+  }
+
+  function offerCompare() {
+    if (!Speech.canRecord() || alt.querySelector('[data-compare]')) return;
+    var b = el('button', 'big-btn grey', 'Record and compare');
+    b.dataset.compare = '1';
+    b.onclick = function () { startCompare(b); };
+    alt.insertBefore(b, alt.firstChild);
+  }
+
+  function startCompare(btn) {
+    var rec = null, stopped = false;
+    btn.textContent = 'Stop';
+    status.textContent = 'Recording \u2014 say it now.';
+    mic.classList.add('live');
+    rec = Speech.record(function (url) {
+      mic.classList.remove('live');
+      status.textContent = 'Play the model, then yourself. Listen for the rhythm.';
+      btn.remove();
+      var play = el('button', 'big-btn grey', 'Model');
+      play.onclick = function () { say(subject.t); };
+      var audio = new Audio(url);
+      var mine = el('button', 'big-btn grey', 'You');
+      mine.onclick = function () { audio.currentTime = 0; audio.play(); };
+      var ok = el('button', 'big-btn green', 'Close enough');
+      ok.onclick = function () { resolveSpeak(ex, subject, null, 1, true); };
+      var no = el('button', 'big-btn grey', 'Not yet');
+      no.onclick = function () { resolveSpeak(ex, subject, null, 0, true); };
+      [play, mine, ok, no].forEach(function (b) { alt.insertBefore(b, alt.lastChild); });
+    }, function (kind) {
+      mic.classList.remove('live');
+      status.textContent = Speech.errorText(kind);
+    });
+    btn.onclick = function () {
+      if (stopped || !rec) return;
+      stopped = true; rec.stop();
+    };
+  }
+
+  mic.onclick = function () {
+    if (LS.state !== 'answering') return;
+    if (listening) { if (handle) handle.stop(); return; }
+    if (Speech.canScore()) startScored(); else offerCompare();
+  };
+
+  if (!Speech.canScore()) offerCompare();
+
+  /* Nobody should be stuck because they are on a bus. */
+  var skip = el('button', 'big-btn grey', 'Skip this one');
+  skip.onclick = function () {
+    if (handle) handle.stop();
+    LS.index++;
+    advance();
+  };
+  alt.appendChild(skip);
+};
+
+/* A spoken answer resolves itself, like the matching grid — there is no Check
+   button to press. `selfJudged` means the learner graded their own recording. */
+function resolveSpeak(ex, subject, heard, score, selfJudged) {
+  var correct = score >= 0.8;
+  LS.answered++;
+  if (ex.item) Store.recordAnswer(ex.item, correct, course.id);
+
+  if (correct) { LS.correct++; Sfx.right(); buzz(10); }
+  else {
+    LS.mistakes++; Sfx.wrong(); buzz(30);
+    if (ex.item && LS.missed.indexOf(ex.item) < 0) LS.missed.push(ex.item);
+    var again = Lesson.reask(course, ex, { canSpeak: canSpeak(), speaking: true }) || ex;
+    LS.queue.push(again);
+    LS.total = LS.queue.length;
+  }
+
+  LS.spoken = { heard: heard, score: score, subject: subject, selfJudged: !!selfJudged };
+  showFeedback(correct, subject.t, ex, null, null);
+}
+
 RENDERERS.match = function (ex, box) {
   box.appendChild(el('div', 'ex-q', ex.question));
   var grid = el('div', 'match-grid');
@@ -623,8 +752,39 @@ function showFeedback(correct, expected, ex, chosen, given) {
 
   if (correct) {
     $('fb-title').textContent = pickPraise();
+    if (ex.type === 'speak' && LS.spoken && LS.spoken.heard) {
+      body.appendChild(el('div', 'fb-line key', 'Heard: \u201c' + LS.spoken.heard + '\u201d'));
+    }
     var note = (ex.word && ex.word.n) || (ex.sentence && ex.sentence.n);
     if (note) body.appendChild(el('div', 'fb-line note', note));
+  } else if (ex.type === 'speak') {
+    /* A mispronunciation is not a vocabulary mistake, so it gets its own
+       explanation: what came out, and which words did not land. */
+    var sp = LS.spoken || {};
+    $('fb-title').textContent = sp.selfJudged ? 'Worth another go' : 'Not quite there';
+
+    var tgt = el('div', 'fb-answer');
+    tgt.appendChild(el('span', 'fb-answer-lbl', 'Target'));
+    tgt.appendChild(el('span', 'script md', sp.subject.t));
+    var pr = Pron.forItem(course, sp.subject);
+    if (pr) tgt.appendChild(el('span', 'pron sm', pr));
+    body.appendChild(tgt);
+
+    if (sp.heard) {
+      body.appendChild(el('div', 'fb-line chose', 'What came through: \u201c' + sp.heard + '\u201d'));
+      var missed = Speech.missedWords(sp.heard, sp.subject.t, course.id);
+      if (missed.length) {
+        body.appendChild(el('div', 'fb-line key',
+          (missed.length === 1 ? 'This word did not land: ' : 'These did not land: ') + missed.join(', ')));
+      }
+      body.appendChild(el('div', 'fb-line note',
+        'The recogniser is not judging your accent — it only reports the words it matched. ' +
+        'Play the model again and copy the rhythm, not just the sounds.'));
+    } else {
+      body.appendChild(el('div', 'fb-line note',
+        'Play the model, say it again, and listen for where yours runs ahead or falls behind.'));
+    }
+    body.appendChild(el('div', 'fb-line again', 'This one will come back later to say again.'));
   } else {
     /* The whole point of the app: say what was wrong with what they chose,
        not merely what the right answer was. */
@@ -866,6 +1026,7 @@ function openSettings() {
   var s = Store.settings();
   $('opt-roman').checked = s.showRoman;
   $('opt-listen').checked = s.listening;
+  $('opt-speaking').checked = s.speaking;
   $('opt-sound').checked = s.sound;
   $('opt-haptics').checked = s.haptics;
   $('opt-goal').value = String(s.dailyGoal);
@@ -877,6 +1038,20 @@ function openSettings() {
     : 'No ' + course.name + ' voice is installed on this phone, so listening exercises are switched off. ' +
       'Android: Settings → General management → Text-to-speech → install the language.';
   $('opt-listen').disabled = !voice;
+
+  var sn = $('speaking-note');
+  if (!Speech.canScore() && !Speech.canRecord()) {
+    sn.textContent = 'This browser has no microphone access, so speaking practice is unavailable.';
+    $('opt-speaking').disabled = true;
+  } else if (Speech.canScore()) {
+    sn.textContent = 'Adds "say this out loud" exercises. Scoring needs a connection, because the ' +
+      'browser sends the audio to Google to be transcribed — it is the only thing in this app that ' +
+      'leaves your phone. With no signal it falls back to recording you and playing it back against ' +
+      'the model, which stays on the device.';
+  } else {
+    sn.textContent = 'Adds "say this out loud" exercises. This browser cannot score speech, so it ' +
+      'records you and plays it back against the model. Nothing leaves the device.';
+  }
 
   $('settings-note').textContent = 'Lisan · ' + Courses.ALL.length + ' courses · ' +
     'everything stored on this device only';
@@ -892,6 +1067,7 @@ function bindSettings() {
 
   on($('opt-roman'), 'change', function () { Store.setSetting('showRoman', this.checked); renderWords(); });
   on($('opt-listen'), 'change', function () { Store.setSetting('listening', this.checked); });
+  on($('opt-speaking'), 'change', function () { Store.setSetting('speaking', this.checked); });
   on($('opt-sound'), 'change', function () { Store.setSetting('sound', this.checked); });
   on($('opt-haptics'), 'change', function () { Store.setSetting('haptics', this.checked); });
   on($('opt-goal'), 'change', function () { Store.setSetting('dailyGoal', +this.value); renderHeader(); });

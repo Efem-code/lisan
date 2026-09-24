@@ -191,6 +191,21 @@ function exFillBlank(sentence, pool) {
   };
 }
 
+
+/* Say it out loud. The only exercise that asks you to produce the language
+   rather than recognise it, which is the part that actually transfers to
+   speaking to a person. */
+function exSpeak(subject, isSentence) {
+  var ex = {
+    type: 'speak',
+    item: subject.t,
+    question: 'Say this out loud',
+    speak: subject.t
+  };
+  if (isSentence) ex.sentence = subject; else ex.word = subject;
+  return ex;
+}
+
 /* ------------------------------------------------------- alphabet makers */
 
 function exLetterIntro(letter) {
@@ -301,6 +316,11 @@ function buildExercises(course, spec, opts) {
       if (canSpeak) out.push(exListen(w, near));
     });
     if (words.length >= 3) out.push(exMatch(words.concat(sample(spec.earlier || [], 2))));
+    /* Two per lesson rather than one per word: speaking aloud is slow, needs a
+       quiet moment, and becomes tedious long before it stops being useful. */
+    if (opts.speaking) {
+      sample(words, Math.min(2, words.length)).forEach(function (w) { out.push(exSpeak(w, false)); });
+    }
     /* Recycle two words from earlier in the unit so nothing is learned once
        and abandoned. */
     sample(spec.earlier || [], 2).forEach(function (w) {
@@ -327,6 +347,7 @@ function buildExercises(course, spec, opts) {
       out.push(exBuildTarget(s, wordPool));
       var fill = exFillBlank(s, wordPool);
       if (fill) out.push(fill);
+      if (opts.speaking) out.push(exSpeak(s, true));
     });
     var intros3 = [], rest = [];
     out.forEach(function (e) { (e.type === 'sentenceIntro' ? intros3 : rest).push(e); });
@@ -373,6 +394,9 @@ function reask(course, ex, opts) {
   }
 
   if (ex.word) {
+    /* A word you could not say comes back to be said again, not turned into a
+       multiple choice — the point was the mouth, not the recognition. */
+    if (ex.type === 'speak') return exSpeak(ex.word, false);
     var wordMakers = [
       function (w) { return exPickMeaning(w, pool); },
       function (w) { return exPickWord(w, pool); }
@@ -382,6 +406,7 @@ function reask(course, ex, opts) {
   }
 
   if (ex.sentence) {
+    if (ex.type === 'speak') return exSpeak(ex.sentence, true);
     var sentMakers = [
       function (sn) { return exBuildTarget(sn, pool); },
       function (sn) { return exBuildEnglish(sn, pool); },
@@ -465,6 +490,7 @@ function buildPractice(course, progress, opts) {
       out.push(exPickMeaning(it.word, pool));
       out.push(exPickWord(it.word, pool));
       if (opts.canSpeak && Math.random() < 0.4) out.push(exListen(it.word, pool));
+      if (opts.speaking && Math.random() < 0.3) out.push(exSpeak(it.word, false));
     }
   });
   return shuffle(out).slice(0, 16);
@@ -472,7 +498,7 @@ function buildPractice(course, progress, opts) {
 
 return {
   planUnit: planUnit, planCourse: planCourse, buildExercises: buildExercises, reask: reask,
-  buildPractice: buildPractice, dueItems: dueItems, nextDue: nextDue,
+  buildPractice: buildPractice, exSpeak: exSpeak, dueItems: dueItems, nextDue: nextDue,
   shuffle: shuffle, sample: sample, WORDS_PER_LESSON: WORDS_PER_LESSON
 };
 })();
