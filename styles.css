@@ -169,7 +169,7 @@ select {
 
 /* The chunky pressable button: a solid bottom edge that collapses on tap. */
 .big-btn {
-  border: 0; border-radius: 14px; padding: 14px 16px;
+  border: 0; border-radius: 14px; padding: 16px 16px; min-height: 54px;
   font-weight: 800; font-size: 15px; letter-spacing: .4px;
   cursor: pointer; text-transform: uppercase;
   box-shadow: 0 4px 0 var(--line-strong);
@@ -189,7 +189,9 @@ select {
   display: grid; grid-template-columns: repeat(4, 1fr);
   background: color-mix(in srgb, var(--surface) 95%, transparent);
   backdrop-filter: blur(12px); border-top: 1px solid var(--line);
-  padding-bottom: env(safe-area-inset-bottom, 0);
+  /* Same reasoning as .footer — keep the tabs clear of the gesture bar. */
+  padding-bottom: 14px;
+  padding-bottom: max(14px, env(safe-area-inset-bottom, 0px));
 }
 .tabs button {
   background: none; border: 0; padding: 9px 4px 11px; cursor: pointer;
@@ -348,7 +350,12 @@ select {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 15;
   background: var(--bg); border-top: 1px solid var(--line);
   padding: 12px var(--pad);
-  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0));
+  /* A guaranteed floor under the safe-area inset. Android reports
+     env(safe-area-inset-bottom) as 0 in a standalone PWA even when gesture
+     navigation is on, which left the Continue button sitting inside the
+     system's bottom swipe zone — visible, but eating every tap. */
+  padding-bottom: 26px;
+  padding-bottom: max(26px, calc(12px + env(safe-area-inset-bottom, 0px)));
 }
 .footer > .big-btn { width: 100%; max-width: 588px; margin: 0 auto; display: block; }
 .feedback {
@@ -440,7 +447,7 @@ select {
 
 .banner {
   position: fixed; left: 0; right: 0; z-index: 35;
-  bottom: calc(66px + env(safe-area-inset-bottom, 0));
+  bottom: calc(66px + max(14px, env(safe-area-inset-bottom, 0px)));
   display: flex; align-items: center; gap: 10px;
   padding: 11px var(--pad);
   background: var(--green); color: #fff;

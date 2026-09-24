@@ -509,7 +509,11 @@ RENDERERS.speak = function (ex, box) {
       courseId: course.id,
       onInterim: function (t) { if (t) status.textContent = t; },
       onResult: function (r) {
-        listening = false; mic.classList.remove('live');
+        /* Stop looking like it is still listening — the exercise is over. */
+        listening = false;
+        mic.classList.remove('live');
+        mic.disabled = true;
+        status.textContent = r.text ? '\u201c' + r.text + '\u201d' : '';
         resolveSpeak(ex, subject, r.text, r.score);
       },
       onError: function (kind) {
@@ -545,9 +549,9 @@ RENDERERS.speak = function (ex, box) {
       var mine = el('button', 'big-btn grey', 'You');
       mine.onclick = function () { audio.currentTime = 0; audio.play(); };
       var ok = el('button', 'big-btn green', 'Close enough');
-      ok.onclick = function () { resolveSpeak(ex, subject, null, 1, true); };
+      ok.onclick = function () { mic.disabled = true; resolveSpeak(ex, subject, null, 1, true); };
       var no = el('button', 'big-btn grey', 'Not yet');
-      no.onclick = function () { resolveSpeak(ex, subject, null, 0, true); };
+      no.onclick = function () { mic.disabled = true; resolveSpeak(ex, subject, null, 0, true); };
       [play, mine, ok, no].forEach(function (b) { alt.insertBefore(b, alt.lastChild); });
     }, function (kind) {
       mic.classList.remove('live');
