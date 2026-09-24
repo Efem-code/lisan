@@ -261,6 +261,8 @@ function renderExercise() {
   }
   /* A matching grid advances itself when the last pair clears, so a Check
      button there is a dead control that only invites tapping. */
+  /* These two resolve themselves rather than being checked. The button comes
+     back the moment feedback is shown — see showFeedback. */
   check.hidden = ex.type === 'match' || ex.type === 'speak';
 
   var render = RENDERERS[ex.type];
@@ -807,7 +809,12 @@ function showFeedback(correct, expected, ex, chosen, given) {
     body.appendChild(el('div', 'fb-line again', 'This one will come back later, asked a different way.'));
   }
 
+  /* Whatever hid this button — a matching grid, a spoken answer — feedback on
+     screen always needs a way forward, so showing it again is this function's
+     job rather than each renderer's. Without it a spoken answer dead-ends:
+     the panel appears and there is nothing to press. */
   var check = $('btn-check');
+  check.hidden = false;
   check.disabled = false;
   check.className = 'big-btn ' + (correct ? 'green' : 'red');
   check.textContent = 'Continue';
